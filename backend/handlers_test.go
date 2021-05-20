@@ -8,15 +8,15 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func TestBookShow(t *testing.T) {
-	t.Log("When the books' isdn does not exist")
+func TestTrackShow(t *testing.T) {
+	t.Log("When the Tracks' isdn does not exist")
 	// A request with a non-existant isdn
-	req1, err := http.NewRequest("GET", "/books/1234", nil)
+	req1, err := http.NewRequest("GET", "/tracks/1234", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rr1 := newRequestRecorder(req1, "GET", "/books/:isdn", BookShow)
+	rr1 := newRequestRecorder(req1, "GET", "/tracks/:isdn", TrackShow)
 	if rr1.Code != 404 {
 		t.Error("Expected response code to be 404")
 	}
@@ -26,21 +26,21 @@ func TestBookShow(t *testing.T) {
 		t.Error("Response body does not match")
 	}
 
-	t.Log("When the book exists")
-	// Create an entry of the book to the bookstore map
-	testBook := &Book{
-		ISDN:   "111",
-		Title:  "test title",
+	t.Log("When the Track exists")
+	// Create an entry of the Track to the trackstore map
+	testTrack := &Track{
+		Id:   "111",
+		Name:  "test title",
 		Author: "test author",
-		Pages:  42,
+		Steps:  42,
 	}
-	bookstore["111"] = testBook
+	trackstore["111"] = testTrack
 	// A request with an existing isdn
-	req2, err := http.NewRequest("GET", "/books/111", nil)
+	req2, err := http.NewRequest("GET", "/tracks/111", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	rr2 := newRequestRecorder(req2, "GET", "/books/:isdn", BookShow)
+	rr2 := newRequestRecorder(req2, "GET", "/tracks/:isdn", TrackShow)
 	if rr2.Code != 200 {
 		t.Error("Expected response code to be 200")
 	}
@@ -51,26 +51,26 @@ func TestBookShow(t *testing.T) {
 	}
 }
 
-func TestBookIndex(t *testing.T) {
-	// Create an entry of the book to the bookstore map
-	testBook := &Book{
-		ISDN:   "111",
-		Title:  "test title",
+func TestTrackIndex(t *testing.T) {
+	// Create an entry of the Track to the trackstore map
+	testTrack := &Track{
+		Id:   "111",
+		Name:  "test title",
 		Author: "test author",
-		Pages:  42,
+		Steps:  42,
 	}
-	bookstore["111"] = testBook
+	trackstore["111"] = testTrack
 	// A request with an existing isdn
-	req1, err := http.NewRequest("GET", "/books", nil)
+	req1, err := http.NewRequest("GET", "/tracks", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	rr1 := newRequestRecorder(req1, "GET", "/books", BookIndex)
+	rr1 := newRequestRecorder(req1, "GET", "/tracks", TrackIndex)
 	if rr1.Code != 200 {
 		t.Error("Expected response code to be 200")
 	}
 	// expected response
-	er1 := "{\"meta\":null,\"data\":[{\"isdn\":\"111\",\"title\":\"test title\",\"author\":\"test author\",\"pages\":42}]}\n"
+	er1 := "{\"meta\":null,\"data\":[{\"id\":\"111\",\"name\":\"test title\",\"author\":\"test author\",\"steps\":42}]}\n"
 	if rr1.Body.String() != er1 {
 		t.Error("Response body does not match")
 	}

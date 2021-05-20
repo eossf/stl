@@ -19,9 +19,9 @@ type Routes []Route
 func AllRoutes() Routes {
 	routes := Routes{
 		Route{"Index", "GET", "/", Index},
-		Route{"BookIndex", "GET", "/books", BookIndex},
-		Route{"Bookshow", "GET", "/books/:isdn", BookShow},
-		Route{"Bookshow", "POST", "/books", BookCreate},
+		Route{"TrackIndex", "GET", "/tracks", TrackIndex},
+		Route{"TrackShow", "GET", "/tracks/:id", TrackShow},
+		Route{"TrackShow", "POST", "/tracks", TrackCreate},
 	}
 	return routes
 }

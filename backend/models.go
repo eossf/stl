@@ -1,13 +1,11 @@
 package main
 
-type Book struct {
-	// The main identifier for the Book. This will be unique.
-	ISDN   string `json:"isdn"`
-	Title  string `json:"title"`
+type Track struct {
+	Id   string `json:"id"`
+	Name  string `json:"name"`
 	Author string `json:"author"`
-	Pages  int    `json:"pages"`
+	Steps  int    `json:"steps"`
 }
 
-// A map to store the books with the ISDN as the key
-// This acts as the storage in lieu of an actual database
-var bookstore = make(map[string]*Book)
+// TODO: mongodb
+var trackstore = make(map[string]*Track)

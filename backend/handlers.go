@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -14,46 +15,50 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
-// Handler for the books Create action
-// POST /books
-func BookCreate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	book := &Book{}
-	if err := populateModelFromHandler(w, r, params, book); err != nil {
+// Handler for the Tracks Create action
+// POST /tracks
+func TrackCreate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	track := &Track{}
+	if err := populateModelFromHandler(w, r, params, track); err != nil {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	bookstore[book.ISDN] = book
-	writeOKResponse(w, book)
+	// TODO: mongodb db.track.insertOne()...
+	trackstore[track.Id] = track
+	writeOKResponse(w, track)
 }
 
-// Handler for the books index action
-// GET /books
-func BookIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	books := []*Book{}
-	for _, book := range bookstore {
-		books = append(books, book)
+// Handler for the Tracks index action
+// GET /tracks
+func TrackIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	tracks := []*Track{}
+	// TODO: get from mongodb
+	for _, track := range trackstore {
+		tracks = append(tracks, track)
 	}
-	writeOKResponse(w, books)
+	writeOKResponse(w, tracks)
 }
 
-// Handler for the books Show action
-// GET /books/:isdn
-func BookShow(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	isdn := params.ByName("isdn")
-	book, ok := bookstore[isdn]
+// Handler for the Tracks Show action
+// GET /tracks/:id
+func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	id := params.ByName("id")
+	// TODO: get from mongodb
+	track, ok := trackstore[id]
 	if !ok {
-		// No book with the isdn in the url has been found
+		// No Track with the id in the url has been found
 		writeErrorResponse(w, http.StatusNotFound, "Record Not Found")
 		return
 	}
-	writeOKResponse(w, book)
+	writeOKResponse(w, track)
 }
 
 // Writes the response as a standard JSON response with StatusOK
 func writeOKResponse(w http.ResponseWriter, m interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(&JsonResponse{Data: m}); err != nil {
+	t := time.Now()
+	if err := json.NewEncoder(w).Encode(&JsonResponse{Timestamp: t, Data: m}); err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 }
