@@ -3,12 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -23,17 +22,16 @@ func TrackCreate(w http.ResponseWriter, r *http.Request, params httprouter.Param
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	// TODO: mongodb db.track.insertOne()...
-	trackstore[track.Id] = track
+	postTrack(*track)
 	writeOKResponse(w, track)
 }
 
 // Handler for the Tracks index action
 // GET /tracks
 func TrackIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	tracks := []*Track{}
-	// TODO: get from mongodb
-	for _, track := range trackstore {
+	tracks := []Track{}
+	results := getTracks()
+	for _, track := range results {
 		tracks = append(tracks, track)
 	}
 	writeOKResponse(w, tracks)
@@ -43,14 +41,8 @@ func TrackIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // GET /tracks/:id
 func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	id := params.ByName("id")
-	// TODO: get from mongodb
-	track, ok := trackstore[id]
-	if !ok {
-		// No Track with the id in the url has been found
-		writeErrorResponse(w, http.StatusNotFound, "Record Not Found")
-		return
-	}
-	writeOKResponse(w, track)
+	result := getTrack(id)
+	writeOKResponse(w, result)
 }
 
 // Writes the response as a standard JSON response with StatusOK
