@@ -15,11 +15,11 @@ git clone https://github.com/eossf/stl.git
 ````sh
 cd stl
 scripts/mbe.sh readme.md
-echo "you can run scripts/mbe.sh Or apply these steps after:"
 ````
 ## Manually installation
 ````bash
 git clone https://github.com/eossf/common.git
+cd common
 find . -name "*.sh" -exec chmod 775  {} \;
 ````
 ### Full k3s/k3d installation
@@ -27,8 +27,10 @@ After this step the kubernetes k3s stack is ready to get stl backend deployment
 ````bash
 echo "install docker, k3s/k3d, go, helm, kubectl, openebs, ..." 
 echo "create a cluster with a namespace : stl and registry port :5000"
-scripts/install_debian10.sh stl 5000
+cd scripts
+./install_debian10.sh stl 5000
 
+cd ~/stl
 echo "change current k3s context namespace"
 kubectl config set-context --current --namespace=stl
 ````
