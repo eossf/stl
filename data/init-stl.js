@@ -1,8 +1,8 @@
 // use stl
 db = db.getSiblingDB("stl");
 db.createUser({
-    user: "MONGODB_USER",
-    pwd: "MONGODB_PASSWORD",
+    user: "stluser",
+    pwd: "$MONGODB_ROOT_PASSWORD",
     roles: [{role: "readWrite", db: "stl"}, { role: "dbAdmin", db: "stl" } ]
 });
 db.createCollection("track");

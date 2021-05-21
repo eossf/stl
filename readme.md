@@ -11,14 +11,15 @@ Clone this project
 ````sh
 git clone https://github.com/eossf/stl.git
 ````
-Then apply theses steps :
-
-**IMPORTANT NOTE:** you can directly run this readme.md, see scripts/mbe.sh
-
-## Installation - Debian 10
+## Automatic installation
+````sh
+cd stl
+scripts/mbe.sh readme.md
+echo "you can run scripts/mbe.sh Or apply these steps after:"
+````
+## Manually installation
 ````bash
 git clone https://github.com/eossf/common.git
-cd common
 find . -name "*.sh" -exec chmod 775  {} \;
 ````
 ### Full k3s/k3d installation
@@ -26,8 +27,7 @@ After this step the kubernetes k3s stack is ready to get stl backend deployment
 ````bash
 echo "install docker, k3s/k3d, go, helm, kubectl, openebs, ..." 
 echo "create a cluster with a namespace : stl and registry port :5000"
-cd scripts
-./install_debian10.sh stl 5000
+scripts/install_debian10.sh stl 5000
 
 echo "change current k3s context namespace"
 kubectl config set-context --current --namespace=stl
@@ -109,7 +109,10 @@ We need minimal data to start the application
 ````bash
 echo "before run a mongoclient in mongo replicaset"
 echo "launch a MongoShell command to install minimal data"
-kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart='Never' --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- mongo mongodb://$MONGODB_USER:$MONGODB_USER@db-stl-mongodb:27017/stl < stl/data/init-stl.js
+mgo=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
+cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
+kubectl cp /tmp/init-stl.js $mgo:/tmp/init-stl.js
+kubectl exec -it --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@db-stl-mongodb:27017/ < /tmp/init-stl.js
 ````
 
 ## Development Environment
