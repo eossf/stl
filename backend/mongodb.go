@@ -10,7 +10,7 @@ import (
 func postTrack(track Track) {
 	// -------------------------------------------------------------------
 	// ------------- mongodb session -------------------------------------
-	server := os.Getenv("MONGODB_SERVERS")
+	server := os.Getenv("MONGODB_HOST")
 	session, err := mgo.Dial(server)
 	if err != nil {
 		panic(err)
@@ -31,7 +31,7 @@ func postTrack(track Track) {
 func getTracks() []Track {
 	// -------------------------------------------------------------------
 	// ------------- mongodb session -------------------------------------
-	server := os.Getenv("MONGODB_SERVERS")
+	server := os.Getenv("MONGODB_HOST")
 	session, err := mgo.Dial(server)
 	if err != nil {
 		panic(err)
@@ -53,7 +53,7 @@ func getTracks() []Track {
 func getTrack(id string) Track {
 	// -------------------------------------------------------------------
 	// ------------- mongodb session -------------------------------------
-	server := os.Getenv("MONGODB_SERVERS")
+	server := os.Getenv("MONGODB_HOST")
 	session, err := mgo.Dial(server)
 	if err != nil {
 		panic(err)
@@ -74,5 +74,5 @@ func getTrack(id string) Track {
 
 func testMongodb() {
 	getTrack("1")
-	log.Println("Mongodb OK server: ", os.Getenv("MONGODB_SERVERS"))
+	log.Println("Mongodb OK server: ", os.Getenv("MONGODB_HOST"))
 }
