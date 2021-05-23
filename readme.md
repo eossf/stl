@@ -73,27 +73,33 @@ echo 'helm install --set image.tag=3.6.23 --set service.type="NodePort" --set se
 ````bash
 echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
+echo 'MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"'
+echo " MONGODB_CLUSTER_DNS: "$MONGODB_CLUSTER_DNS
 
 echo "Get IP of the standalone server (CIDR > 16), first interface !"
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
+echo " IP: "$vlan16
+echo " MONGODB_HOST: "$MONGODB_HOST
 
 echo "To get the root password run:"
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
+echo 'export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)'
 
 echo "To connect to your database, create a MongoDB(R) client container:"
-kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart='Never' --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash
+echo 'kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart='Never' --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
 
 echo "Then, run the following command:"
 echo 'mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD'
+echo 'mongo --host 127.0.0.1 --port 27017 --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
 
 echo "To connect to your database from outside the cluster execute the following commands, ClusterIp :"
 kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:27017 &
+echo 'kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:27017 &'
 ````
 
 ````sh
-mongo --host 127.0.0.1 --port 27017 --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
-# if you selected NodePort deploymenet, port 40000 :
+# if you selected NodePort deployment, port 40000 :
 export NODE_IP=$(kubectl get nodes --namespace stl -o jsonpath="{.items[0].status.addresses[0].address}")
 export NODE_PORT=$(kubectl get --namespace stl -o jsonpath="{.spec.ports[0].nodePort}" services mongodb-stl)
 kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:$NODE_PORT &
@@ -133,10 +139,11 @@ Open the project and configure these three variables to launch the rest backend
  - [ ] index mongo ?
  - [ ] initial data at startup
  - [ ] get env variable in javascript mongo command, possible?
- - [ ] mongodb class and pool of connections
+ - [x] mongodb class and pool of connections
  - [ ] load balance traefik 27017
  - [ ] travis CI/CD
  - [ ] test
+ - [ ] revert back
 
 ## Revert Back
 ````sh
