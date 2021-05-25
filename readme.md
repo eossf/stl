@@ -94,6 +94,7 @@ echo 'mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root
 echo 'mongo --host 127.0.0.1 --port 27017 --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
 
 echo "To connect to your database from outside the cluster execute the following commands, ClusterIp :"
+sleep(5)
 kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:27017 &
 echo 'kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:27017 &'
 ````
@@ -144,6 +145,7 @@ Open the project and configure these three variables to launch the rest backend
  - [ ] travis CI/CD
  - [ ] test
  - [ ] revert back
+ - [ ] change sleep(5) by loop wait while pods is actually running
 
 ## Revert Back
 ````sh
@@ -151,6 +153,6 @@ Open the project and configure these three variables to launch the rest backend
 kill -9 `ps -aux | grep "27017:27017" | grep "kubectl" | awk '{print $2}'`
 # revert back mongo
 db.dropUser("stluser");
-db.track.drop();
+db.tracks.drop();
 db.dropDatabase();
 ````
