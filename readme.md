@@ -125,6 +125,15 @@ kubectl cp /tmp/init-stl.js $mgo:/tmp/init-stl.js
 kubectl exec -it --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@db-stl-mongodb:27017/ < /tmp/init-stl.js
 ````
 
+### module go backend
+````bash
+cd backend
+go get -u -v -f all
+while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')
+go build -o stl-backend .
+
+
+````
 ## Development Environment
 ### Goland Idea
 Open the project and configure these three variables to launch the rest backend 

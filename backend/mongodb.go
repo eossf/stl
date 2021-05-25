@@ -71,7 +71,7 @@ func getSession() *Session {
 		log.Fatal("No more connection available ", countSessions, "/", MAX, " reached")
 	}
 	if addSession && countSessions <= MAX {
-		s := New(os.Getenv("MONGODB_HOST"), "stl", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"), "stl", "tracks")
+		s := New(os.Getenv("MONGODB_HOST"), "stl", "stluser", os.Getenv("MONGODB_ROOT_PASSWORD"), "stl", "tracks")
 		sessions = append(sessions, s)
 		log.Println("New Session created: ", s.Uuid)
 	} else {
