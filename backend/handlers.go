@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
+	"strconv"
 )
 
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -41,7 +41,8 @@ func TrackIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // GET /tracks/:id
 func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	id := params.ByName("id")
-	result := getTrack(id)
+	i, _ := strconv.Atoi(id)
+	result := getTrack(i)
 	writeOKResponse(w, result)
 }
 
@@ -49,8 +50,10 @@ func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 func writeOKResponse(w http.ResponseWriter, m interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	t := time.Now()
+/*	t := time.Now()
 	if err := json.NewEncoder(w).Encode(&JsonResponse{Timestamp: t, Data: m}); err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")*/
+	if err := json.NewEncoder(w).Encode(m); err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 }

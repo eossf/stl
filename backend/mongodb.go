@@ -36,7 +36,7 @@ func getTracks() []Track {
 	return results
 }
 
-func getTrack(id string) Track {
+func getTrack(id int) Track {
 	result := Track{}
 	s := getSession()
 	s.Locked = true
@@ -71,16 +71,17 @@ func getSession() *Session {
 		log.Fatal("No more connection available ", countSessions, "/", MAX, " reached")
 	}
 	if addSession && countSessions <= MAX {
-		s := New(os.Getenv("MONGODB_HOST"), "stl", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"), "stl", "track")
+		s := New(os.Getenv("MONGODB_HOST"), "stl", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"), "stl", "tracks")
 		sessions = append(sessions, s)
 		log.Println("New Session created: ", s.Uuid)
 	} else {
 		log.Println("Use existing connection")
+		sessions[countSessions].MgoSession.Refresh()
 	}
 	return sessions[countSessions]
 }
 
-func closeDb() {
+func closeSession() {
 	for _, s := range sessions {
 		if s != nil {
 			defer s.MgoSession.Close()
