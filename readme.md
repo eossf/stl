@@ -19,8 +19,13 @@ This script read "bash" code blocks in this file. "sh" blocks are ignored.
 cd stl
 scripts/mbe.sh readme.md
 ````
-## Manually installation
+## Manual installation
+### Common tools
 ````bash
+echo " -----------------------------------------"
+echo " --- ### Common tools"
+echo " -----------------------------------------"
+
 git clone https://github.com/eossf/common.git
 cd common
 # do this on the git folder: find . -name "*.sh" -exec git add --chmod=+x {} \;
@@ -28,6 +33,10 @@ cd common
 ### Full k3s/k3d installation
 After this step the kubernetes k3s stack is ready to get stl backend deployment
 ````bash
+echo " -----------------------------------------"
+echo " --- ### Full k3s/k3d installation"
+echo " -----------------------------------------"
+
 echo "install docker, k3s/k3d, go, helm, kubectl, openebs, ..." 
 echo "create a cluster with a namespace : stl and registry port :5000"
 cd scripts
@@ -61,8 +70,11 @@ alias kns='kubectl get ns'
 EOF
 source ~/.bashrc
 ````
-## Install Helm mongodb
+### Install Helm mongodb
 ````bash
+echo " -----------------------------------------"
+echo " --- ### Install Helm mongodb"
+echo " -----------------------------------------"
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
 echo "with ClusterIp (default)"
@@ -72,8 +84,11 @@ echo "if you select a node port 40000 exposure"
 echo 'helm install --set image.tag=3.6.23 --set service.type="NodePort" --set service.nodePort=40000 db-stl bitnami/mongodb'
 ````
 
-## Install Mongodb client side (firewall, PF, noSqlClient...)
+### Set up firewall, PF, noSqlClient...
 ````bash
+echo " -----------------------------------------"
+echo " --- ### Set up firewall, PF, noSqlClient"
+echo " -----------------------------------------"
 echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
 echo 'MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"'
@@ -112,13 +127,19 @@ mongo --host $NODE_IP --port $NODE_PORT --authenticationDatabase admin -p $MONGO
 ### Install noSqlclient
 Launch your browser to this address http://$MONGODB_HOST:3000/
 ````bash
+echo " -----------------------------------------"
+echo " --- ### Install noSqlclient"
+echo " -----------------------------------------"
 docker run -d -p 3000:3000 --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
 ufw allow 27017
 ````
 
-### Feed with data
+### Feed with configuration data
 We need minimal data to start the application
 ````bash
+echo " -----------------------------------------"
+echo " --- ### Feed with configuration data"
+echo " -----------------------------------------"
 echo "before run a mongoclient in mongo replicaset"
 echo "launch a MongoShell command to install minimal data"
 mgo=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
@@ -127,16 +148,19 @@ kubectl cp /tmp/init-stl.js $mgo:/tmp/init-stl.js
 kubectl exec -it --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@db-stl-mongodb:27017/ < /tmp/init-stl.js
 ````
 
-### module go backend
+### STL backend
 ````bash
+echo " -----------------------------------------"
+echo " --- ### STL backend"
+echo " -----------------------------------------"
 cd backend
 go get -u -v -f all
 while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')
 go build -o stl-backend .
 ufw allow 8080
 ./stl-backend &
-
 ````
+
 ## Development Environment
 ### Goland Idea
 Open the project and configure these three variables to launch the rest backend 
