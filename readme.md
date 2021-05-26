@@ -23,7 +23,7 @@ scripts/mbe.sh readme.md
 ````bash
 git clone https://github.com/eossf/common.git
 cd common
-find . -name "*.sh" -exec chmod 775  {} \;
+# do this on the git folder: find . -name "*.sh" -exec git add --chmod=+x {} \;
 ````
 ### Full k3s/k3d installation
 After this step the kubernetes k3s stack is ready to get stl backend deployment
