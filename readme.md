@@ -7,8 +7,10 @@ STL is a demo of a fullstack application, features are :
 - [ ] Guide a runner
 - [ ] Misc: Import, Export GPX, Enrich with metadata, ...
 
-Clone this project
+Clone this project on a remote server
 ````sh
+ssh -i ~/.ssh/id_rsa root@REMOTE_IP
+apt -y install git
 git clone https://github.com/eossf/stl.git
 ````
 ## Automatic installation
@@ -80,7 +82,7 @@ echo " MONGODB_CLUSTER_DNS: "$MONGODB_CLUSTER_DNS
 echo "Get IP of the standalone server (CIDR > 16), first interface !"
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
-echo " IP: "$vlan16
+echo " IP on this vlan minimum/16: "$vlan16
 echo " MONGODB_HOST: "$MONGODB_HOST
 
 echo "To get the root password run:"
@@ -131,7 +133,8 @@ cd backend
 go get -u -v -f all
 while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')
 go build -o stl-backend .
-
+ufw allow 8080
+./stl-backend &
 
 ````
 ## Development Environment

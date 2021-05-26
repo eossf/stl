@@ -48,12 +48,10 @@ func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 
 // Writes the response as a standard JSON response with StatusOK
 func writeOKResponse(w http.ResponseWriter, m interface{}) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-/*	t := time.Now()
-	if err := json.NewEncoder(w).Encode(&JsonResponse{Timestamp: t, Data: m}); err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")*/
-	if err := json.NewEncoder(w).Encode(m); err != nil {
+	v := json.NewEncoder(w).Encode(m)
+	if err := v; err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 }
