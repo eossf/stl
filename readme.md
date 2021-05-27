@@ -75,6 +75,7 @@ source ~/.bashrc
 echo " -----------------------------------------"
 echo " --- ### Install Helm mongodb"
 echo " -----------------------------------------"
+
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
 echo "with ClusterIp (default)"
@@ -89,6 +90,7 @@ echo 'helm install --set image.tag=3.6.23 --set service.type="NodePort" --set se
 echo " -----------------------------------------"
 echo " --- ### Set up firewall, PF, noSqlClient"
 echo " -----------------------------------------"
+
 echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
 echo 'MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"'
@@ -130,6 +132,7 @@ Launch your browser to this address http://$MONGODB_HOST:3000/
 echo " -----------------------------------------"
 echo " --- ### Install noSqlclient"
 echo " -----------------------------------------"
+
 docker run -d -p 3000:3000 --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
 ufw allow 27017
 ````
@@ -140,12 +143,12 @@ We need minimal data to start the application
 echo " -----------------------------------------"
 echo " --- ### Feed with configuration data"
 echo " -----------------------------------------"
-echo "before run a mongoclient in mongo replicaset"
-echo "launch a MongoShell command to install minimal data"
+
 mgo=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
+echo "pods mongo : "$mgo
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
 kubectl cp /tmp/init-stl.js $mgo:/tmp/init-stl.js
-kubectl exec -it --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@db-stl-mongodb:27017/ < /tmp/init-stl.js
+kubectl exec -i --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:27017/ < /tmp/init-stl.js
 ````
 
 ### STL backend
@@ -153,6 +156,7 @@ kubectl exec -it --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASS
 echo " -----------------------------------------"
 echo " --- ### STL backend"
 echo " -----------------------------------------"
+
 cd backend
 go get -u -v -f all
 while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')
