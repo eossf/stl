@@ -7,9 +7,12 @@ STL is a demo of a fullstack application, features are :
 - [ ] Guide a runner
 - [ ] Misc: Import, Export GPX, Enrich with metadata, ...
 
-Clone this project on a remote server
+Connect to your server
 ````sh
 ssh -i ~/.ssh/id_rsa root@REMOTE_IP
+````
+Clone this project on a remote server
+````sh
 apt -y install git
 git clone https://github.com/eossf/stl.git
 ````
@@ -140,6 +143,7 @@ echo -n "Wait after mongo pod is actually creating "
 while [[ `kubectl get pods -A | grep "db-stl-mongodb" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
 PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
 while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
+kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
 kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
 ````
@@ -219,4 +223,6 @@ echo " [x] remove project ----------------- "
 cd ~
 rm -Rf stl
 
+echo " [x] restart docker ----------------- "
+systemctl restart docker 
 ````
