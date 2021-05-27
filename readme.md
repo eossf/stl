@@ -191,9 +191,12 @@ Open the project and configure these three variables to launch the rest backend
 ## Revert Back
 ````sh
 # port forwarding if apply
-kill -9 `ps -aux | grep "27017:27017" | grep "kubectl" | awk '{print $2}'`
 # revert back mongo
 db.dropUser("stluser");
 db.tracks.drop();
 db.dropDatabase();
+kill -9 `ps -aux | grep "27017:27017" | grep "kubectl" | awk '{print $2}'`
+docker stop mongoclient
+docker rm mongoclient
+
 ````
