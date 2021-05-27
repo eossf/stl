@@ -27,8 +27,8 @@ echo " --- ### Common tools"
 echo " -----------------------------------------"
 
 git clone https://github.com/eossf/common.git
-cd common
-echo 'Do this on the git folder: find . -name "*.sh" -exec git add --chmod=+x {} \;'
+echo 'Done this on the git folder: find . -name "*.sh" -exec git add --chmod=+x {} \;'
+
 ````
 ### Full k3s/k3d installation
 After this step the kubernetes k3s stack is ready to get stl backend deployment
@@ -39,7 +39,7 @@ echo " -----------------------------------------"
 
 echo "install docker, k3s/k3d, go, helm, kubectl, openebs, ..." 
 echo "create a cluster with a namespace : stl and registry port :5000"
-cd scripts
+cd ~/stl/common/scripts
 ./install_debian10.sh stl 5000
 
 cd ~/stl
@@ -157,7 +157,7 @@ echo " -----------------------------------------"
 echo " --- ### STL backend"
 echo " -----------------------------------------"
 
-cd backend
+cd ~/stl/backend
 go get -u -v -f all
 while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')
 go build -o stl-backend .
