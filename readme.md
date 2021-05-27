@@ -91,6 +91,8 @@ echo " -----------------------------------------"
 echo " --- ### Set up firewall, PF, noSqlClient"
 echo " -----------------------------------------"
 
+export PORT_MONGODB=27017
+
 echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
 echo 'MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"'
@@ -111,19 +113,19 @@ echo 'kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart=
 
 echo "Then, run the following command:"
 echo 'mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD'
-echo 'mongo --host 127.0.0.1 --port 27017 --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
+echo 'mongo --host 127.0.0.1 --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
 
 echo "To connect to your database from outside the cluster execute the following commands, ClusterIp :"
 sleep 5
-kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:27017 &
-echo 'kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:27017 &'
+kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &
+echo 'kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &'
 ````
 
 ````sh
 # if you selected NodePort deployment, port 40000 :
 export NODE_IP=$(kubectl get nodes --namespace stl -o jsonpath="{.items[0].status.addresses[0].address}")
 export NODE_PORT=$(kubectl get --namespace stl -o jsonpath="{.spec.ports[0].nodePort}" services mongodb-stl)
-kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb 27017:$NODE_PORT &
+kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$NODE_PORT &
 mongo --host $NODE_IP --port $NODE_PORT --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
 ````
 ### Install noSqlclient
@@ -134,7 +136,7 @@ echo " --- ### Install noSqlclient"
 echo " -----------------------------------------"
 
 docker run -d -p 3000:3000 --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
-ufw allow 27017
+ufw allow $PORT_MONGODB
 ````
 
 ### Feed with configuration data
@@ -147,8 +149,7 @@ echo " -----------------------------------------"
 mgo=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
 echo "pods mongo : "$mgo
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
-kubectl cp /tmp/init-stl.js $mgo:/tmp/init-stl.js
-kubectl exec -i --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:27017/ < /tmp/init-stl.js
+kubectl exec -i --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
 ````
 
 ### STL backend
@@ -158,10 +159,11 @@ echo " --- ### STL backend"
 echo " -----------------------------------------"
 
 cd ~/stl/backend
+export PORT_STL_BACKEND=8080
 go get -u -v -f all
 while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')
 go build -o stl-backend .
-ufw allow 8080
+ufw allow $PORT_STL_BACKEND
 ./stl-backend &
 ````
 
@@ -179,24 +181,43 @@ Open the project and configure these three variables to launch the rest backend
  - [x] create db stl + collection + user
  - [x] minimal data for application running (track id=1, user id=1, ... )
  - [ ] index mongo ?
- - [ ] initial data at startup
+ - [ ] initial data at startup (before the container is started)
  - [ ] get env variable in javascript mongo command, possible?
  - [x] mongodb class and pool of connections
  - [ ] load balance traefik 27017
  - [ ] travis CI/CD
  - [ ] test
- - [ ] revert back
+ - [x] revert
  - [ ] change sleep(5) by loop wait while pods is actually running
 
 ## Revert Back
 ````sh
-# port forwarding if apply
-# revert back mongo
-db.dropUser("stluser");
-db.tracks.drop();
-db.dropDatabase();
-kill -9 `ps -aux | grep "27017:27017" | grep "kubectl" | awk '{print $2}'`
+cd ~/stl
+echo " [x] revert stl-backend ----------------- "
+while [[ `ufw status numbered | grep "$PORT_STL_BACKEND" | wc -l` -gt 0 ]]; do echo "delete mongo rule "$PORT_STL_BACKEND ; ufw --force delete `ufw status numbered | grep "$PORT_STL_BACKEND" | tail -1 | cut -d"[" -f2 | cut -d"]" -f1`; done
+PID=`ps -a | grep "stl-backend" | cut -d" " -f1`
+kill -9 $PID
+
+echo " [x] revert data ----------------- "
+kubectl exec -i --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < data/destroy-stl.js
+
+echo " [x] revert noSqlclient ----------------- "
 docker stop mongoclient
 docker rm mongoclient
+
+echo " [x] revert mongo ----------------- "
+# port forwarding if apply
+PID=`ps -aux | grep "$PORT_MONGODB:$PORT_MONGODB" | grep "kubectl" | awk '{print $2}'`
+kill -9 $PID
+while [[ `ufw status numbered | grep "$PORT_MONGODB" | wc -l` -gt 0 ]]; do echo "delete mongo rule "$PORT_MONGODB ; ufw --force delete `ufw status numbered | grep "$PORT_MONGODB" | tail -1 | cut -d"[" -f2 | cut -d"]" -f1`; done
+helm uninstall db-stl
+
+echo " [x] revert k3d ----------------- "
+cd ~/stl/common/scripts
+./delete_k3d.sh stl
+
+echo " [x] remove project ----------------- "
+cd ~
+rm -Rf stl
 
 ````
