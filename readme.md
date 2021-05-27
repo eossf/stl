@@ -149,7 +149,7 @@ echo " -----------------------------------------"
 PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
 echo ""
 echo -n "wait after pod $PODMONGO is creating "
-while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "." sleep 1; done
+while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
 
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
 kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
