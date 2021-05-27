@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -25,5 +26,6 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	log.Fatal(http.ListenAndServe(": $os.Getegid('PORT_STL_BACKEND')", router))
+	host_port := os.Getenv("PORT_STL_BACKEND")
+	log.Fatal(http.ListenAndServe(":"+host_port, router))
 }
