@@ -25,5 +25,5 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(": $os.Getegid('PORT_STL_BACKEND')", router))
 }

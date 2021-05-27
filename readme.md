@@ -84,6 +84,13 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 echo "with ClusterIp (default)"
 helm install --set image.tag=3.6.23 db-stl bitnami/mongodb
 
+echo ""
+echo -n "Wait after mongo pod is actually creating "
+while [[ `kubectl get pods -A | grep "db-stl-mongodb" | wc -l` -eq 0 ]]; do echo -n ":"; sleep 1; done
+export PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
+while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
+echo ""
+
 echo "if you select a node port 40000 exposure"
 echo 'helm install --set image.tag=3.6.23 --set service.type="NodePort" --set service.nodePort=40000 db-stl bitnami/mongodb'
 ````
@@ -97,6 +104,8 @@ echo " -----------------------------------------"
 export PORT_MONGODB=27017
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
 
+ufw allow $PORT_MONGODB
+
 echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"$MONGODB_CLUSTER_DNS
 
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
@@ -104,6 +113,7 @@ export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cu
 echo "IP for this vlan "$vlan16"/16 MONGODB_HOST: "$MONGODB_HOST
 
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
+echo "MONGODB_HOST:MONGODB_ROOT_PASSWORD "$MONGODB_HOST":"$MONGODB_ROOT_PASSWORD
 
 echo "To connect to your database, create a MongoDB(R) client container:"
 echo '  kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart="Never" --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
@@ -128,8 +138,9 @@ echo " -----------------------------------------"
 echo " --- ### Install noSqlclient"
 echo " -----------------------------------------"
 
+export PORT_NOSLQCLIENT=3000
 docker run -d -p 3000:3000 --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
-ufw allow $PORT_MONGODB
+ufw allow $PORT_NOSLQCLIENT
 ````
 
 ### Feed with configuration data
@@ -139,12 +150,11 @@ echo " -----------------------------------------"
 echo " --- ### Feed with configuration data"
 echo " -----------------------------------------"
 echo ""
-echo -n "Wait after mongo pod is actually creating "
-while [[ `kubectl get pods -A | grep "db-stl-mongodb" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
-PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
-while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
+
+echo "Port forwarding: "$PORT_MONGODB
 kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &
-sleep 1
+sleep 2
+
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
 kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
 ````
@@ -193,6 +203,8 @@ cd ~/stl
 
 export PORT_STL_BACKEND=8080
 export PORT_MONGODB=27017
+export PORT_NOSQLCLIENT=3000
+
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
@@ -208,6 +220,7 @@ kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_
 echo " [x] revert noSqlclient ----------------- "
 docker stop mongoclient
 docker rm mongoclient
+while [[ `ufw status numbered | grep "$PORT_NOSQLCLIENT" | wc -l` -gt 0 ]]; do echo "delete mongo rule "$PORT_NOSQLCLIENT ; ufw --force delete `ufw status numbered | grep "$PORT_NOSQLCLIENT" | tail -1 | cut -d"[" -f2 | cut -d"]" -f1`; done
 
 echo " [x] revert mongo ----------------- "
 # port forwarding if apply
