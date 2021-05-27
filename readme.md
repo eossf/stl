@@ -146,10 +146,13 @@ echo " -----------------------------------------"
 echo " --- ### Feed with configuration data"
 echo " -----------------------------------------"
 
-mgo=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
-echo "pods mongo : "$mgo
+PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
+echo ""
+echo -n "wait after pod $PODMONGO is creating "
+while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "." sleep 1; done
+
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
-kubectl exec -i --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
+kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
 ````
 
 ### STL backend
@@ -193,13 +196,20 @@ Open the project and configure these three variables to launch the rest backend
 ## Revert Back
 ````sh
 cd ~/stl
+
+export PORT_STL_BACKEND=8080
+export PORT_MONGODB=27017
+vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
+export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
+export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
+
 echo " [x] revert stl-backend ----------------- "
 while [[ `ufw status numbered | grep "$PORT_STL_BACKEND" | wc -l` -gt 0 ]]; do echo "delete mongo rule "$PORT_STL_BACKEND ; ufw --force delete `ufw status numbered | grep "$PORT_STL_BACKEND" | tail -1 | cut -d"[" -f2 | cut -d"]" -f1`; done
 PID=`ps -a | grep "stl-backend" | cut -d" " -f1`
 kill -9 $PID
 
 echo " [x] revert data ----------------- "
-kubectl exec -i --namespace stl $mgo -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < data/destroy-stl.js
+kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < data/destroy-stl.js
 
 echo " [x] revert noSqlclient ----------------- "
 docker stop mongoclient
