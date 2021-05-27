@@ -92,33 +92,23 @@ echo " --- ### Set up firewall, PF, noSqlClient"
 echo " -----------------------------------------"
 
 export PORT_MONGODB=27017
-
-echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
-echo 'MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"'
-echo " MONGODB_CLUSTER_DNS: "$MONGODB_CLUSTER_DNS
 
-echo "Get IP of the standalone server (CIDR > 16), first interface !"
+echo "MongoDB(R) can be accessed on the following DNS name(s) and ports from within your cluster:"$MONGODB_CLUSTER_DNS
+
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
-echo " IP on this vlan minimum/16: "$vlan16
-echo " MONGODB_HOST: "$MONGODB_HOST
+echo "IP for this vlan "$vlan16"/16 MONGODB_HOST: "$MONGODB_HOST
 
-echo "To get the root password run:"
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
-echo 'export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)'
 
 echo "To connect to your database, create a MongoDB(R) client container:"
-echo 'kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart='Never' --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
-
+echo '  kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart="Never" --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
 echo "Then, run the following command:"
-echo 'mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD'
-echo 'mongo --host 127.0.0.1 --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
-
+echo '  mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD'
+echo '  mongo --host 127.0.0.1 --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
 echo "To connect to your database from outside the cluster execute the following commands, ClusterIp :"
-sleep 5
-kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &
-echo 'kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &'
+echo '  kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &'
 ````
 
 ````sh
@@ -145,12 +135,11 @@ We need minimal data to start the application
 echo " -----------------------------------------"
 echo " --- ### Feed with configuration data"
 echo " -----------------------------------------"
-
-PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
 echo ""
-echo -n "wait after pod $PODMONGO is creating "
+echo -n "Wait after mongo pod is actually creating "
+while [[ `kubectl get pods -A | grep "db-stl-mongodb" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
+PODMONGO=`kubectl get pods | grep "db-stl-mongodb" | cut -d" " -f1`
 while [[ `kubectl get pods $PODMONGO | grep "Running" | wc -l` -eq 0 ]]; do echo -n "."; sleep 1; done
-
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
 kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
 ````
