@@ -106,7 +106,7 @@ echo " -----------------------------------------"
 export PORT_STL_BACKEND=8080
 export PORT_MONGODB=27017
 export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
-export PORT_NOSLQCLIENT=3000
+export PORT_NOSQLCLIENT=3000
 
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
@@ -145,8 +145,8 @@ echo " -----------------------------------------"
 echo " --- ### Install noSqlclient"
 echo " -----------------------------------------"
 
-docker run -d -p 3000:3000 --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
-ufw allow $PORT_NOSLQCLIENT
+docker run -d -p $PORT_NOSQLCLIENT:$PORT_NOSQLCLIENT --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
+ufw allow $PORT_NOSQLCLIENT
 ````
 
 ### Feed with configuration data
