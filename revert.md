@@ -3,6 +3,11 @@
 ````bash
 cd ~/stl
 
+export PORT_STL_BACKEND=8080
+export PORT_MONGODB=27017
+export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
+export PORT_NOSLQCLIENT=3000
+
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
