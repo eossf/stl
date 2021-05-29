@@ -115,6 +115,27 @@ export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb
 echo "MONGODB_HOST=$MONGODB_HOST;MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD;PORT_STL_BACKEND=$PORT_STL_BACKEND"
 ````
 
+To connect to your database, create a MongoDB(R) client container
+````sh
+kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart="Never" --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
+````
+Then, run the following command:
+````sh
+mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD'
+mongo --host 127.0.0.1 --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
+````
+To connect to your database from outside the cluster execute the following commands, ClusterIp :
+ ````sh
+kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &'
+ ````
+If you selected NodePort deployment, port 40000 :
+ ````sh
+ export NODE_IP=$(kubectl get nodes --namespace stl -o jsonpath="{.items[0].status.addresses[0].address}")
+ export NODE_PORT=$(kubectl get --namespace stl -o jsonpath="{.spec.ports[0].nodePort}" services mongodb-stl)
+ kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$NODE_PORT &
+ mongo --host $NODE_IP --port $NODE_PORT --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
+````
+
 ````bash
 echo " -----------------------------------------"
 echo " --- ### Port forwarding "
@@ -122,21 +143,6 @@ echo " -----------------------------------------"
 
 kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &
 sleep 5
-
-# "To connect to your database, create a MongoDB(R) client container:"
-# '  kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart="Never" --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
-# "Then, run the following command:"
-# '  mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD'
-# '  mongo --host 127.0.0.1 --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD'
-
-# "To connect to your database from outside the cluster execute the following commands, ClusterIp :"
-# '  kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$PORT_MONGODB &'
-
-# if you selected NodePort deployment, port 40000 :
-# export NODE_IP=$(kubectl get nodes --namespace stl -o jsonpath="{.items[0].status.addresses[0].address}")
-# export NODE_PORT=$(kubectl get --namespace stl -o jsonpath="{.spec.ports[0].nodePort}" services mongodb-stl)
-# kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$NODE_PORT &
-# mongo --host $NODE_IP --port $NODE_PORT --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
 ````
 ### Install noSqlclient
 Launch your browser to this address http://$MONGODB_HOST:3000/
