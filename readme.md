@@ -1,10 +1,10 @@
 # STL : SainTeLyon flutter app
 STL is a demo of a fullstack application, features are :
-- [x] Live Run, follows an existing track (GPX)
+- [ ] Live Run, follows an existing track (GPX)
 - [ ] Live Run, records a track (GPX)
-- [x] Support a runner: go to stops using GPS mobile
+- [ ] Support a runner: go to stops using GPS mobile
 - [ ] Live View runners and position in a map
-- [ ] Guide a runner
+- [ ] View Track and guide a runner
 - [ ] Misc: Import, Export GPX, Enrich with metadata, ...
 
 Connect to your server

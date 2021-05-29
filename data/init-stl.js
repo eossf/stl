@@ -6,6 +6,6 @@ db.createUser({
     roles: [{role: "readWrite", db: "stl"}, { role: "dbAdmin", db: "stl" } ]
 });
 db.createCollection("tracks");
-db.tracks.insertOne({"id": 0, "name": "Test id 0", "author": "stluser", steps: 0});
-db.tracks.insertOne({"id": 1, "name": "SainteLyon 2021 JIT 75kms", "author": "stluser", steps: 1});
-db.tracks.insertOne({"id": 2, "name": "UTMB 2021 CCC 101kms", "author": "stluser", steps: 1});
+db.tracks.insertOne({"id": 1, "name": "Track Test 1 - 1km", "author": "stluser", steps: 0});
+db.tracks.insertOne({"id": 2, "name": "Track Test 2 - 4.5kms", "author": "stluser", steps: 1});
+db.tracks.insertOne({"id": 3, "name": "Saintelyon - JIT 75kms", "author": "stluser", steps: 10});
