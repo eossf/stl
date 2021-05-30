@@ -73,6 +73,17 @@ alias kns='kubectl get ns'
 EOF
 source ~/.bashrc
 ````
+### export variables
+````bash
+echo " -----------------------------------------"
+echo " --- ### Export variables"
+echo " -----------------------------------------"
+
+export PORT_STL_BACKEND=8080
+export PORT_MONGODB=27017
+export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
+export PORT_NOSQLCLIENT=3000
+````
 ### Install Helm mongodb
 ````bash
 echo " -----------------------------------------"
@@ -100,16 +111,11 @@ If you select a node port 40000 exposure
 helm install --set image.tag=3.6.23 --set service.type="NodePort" --set service.nodePort=40000 db-stl bitnami/mongodb
 ````
 
-### Set variables
+### Set Mongo variables
 ````bash
 echo " -----------------------------------------"
-echo " --- ### Set variables"
+echo " --- ### Set Mongo variables"
 echo " -----------------------------------------"
-
-export PORT_STL_BACKEND=8080
-export PORT_MONGODB=27017
-export MONGODB_CLUSTER_DNS="db-stl-mongodb.default.svc.cluster.local"
-export PORT_NOSQLCLIENT=3000
 
 vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
