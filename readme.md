@@ -95,7 +95,7 @@ ufw allow $PORT_MONGODB
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
 echo "with ClusterIp (default)"
-helm install --set image.tag=3.6.23 db-stl bitnami/mongodb
+helm install db-stl bitnami/mongodb
 sleep 5
 
 echo ""
@@ -108,7 +108,7 @@ echo ""
 
 If you select a node port 40000 exposure
 ````sh
-helm install --set image.tag=3.6.23 --set service.type="NodePort" --set service.nodePort=40000 db-stl bitnami/mongodb
+helm install --set service.type="NodePort" --set service.nodePort=40000 db-stl bitnami/mongodb
 ````
 
 ### Set Mongo variables
@@ -117,7 +117,7 @@ echo " -----------------------------------------"
 echo " --- ### Set Mongo variables"
 echo " -----------------------------------------"
 
-vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-2`
+vlan16=`ip r | grep "default" | cut -d" " -f3 | cut -d"." -f1-4`
 export MONGODB_HOST=`ip -o -4 addr list | grep "$vlan16" | awk '{print $4}' | cut -d/ -f1 | head -1`
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace stl db-stl-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 --decode)
 
@@ -126,12 +126,12 @@ echo "MONGODB_HOST=$MONGODB_HOST;MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD;PO
 
 To connect to your database, create a MongoDB(R) client container
 ````sh
-kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart="Never" --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb:3.6.23 --command -- bash'
+kubectl run --namespace stl db-stl-mongodb-client --rm --tty -i --restart="Never" --env="PORT_MONGODB=$PORT_MONGODB" --env="MONGODB_ROOT_PASSWORD=$MONGODB_ROOT_PASSWORD" --image docker.io/bitnami/mongodb --command -- bash
 ````
 Then, run the following command:
 ````sh
 mongo admin --host "db-stl-mongodb" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD
-mongo --host 127.0.0.1 --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
+mongo --host "db-stl-mongodb" --port $PORT_MONGODB --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
 ````
 To connect to your database from outside the cluster execute the following commands, ClusterIp :
  ````sh
@@ -154,7 +154,7 @@ kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_
 sleep 5
 ````
 ### Install noSqlclient
-Launch your browser to this address http://$MONGODB_HOST:3000/
+
 ````bash
 echo " -----------------------------------------"
 echo " --- ### Install noSqlclient"
@@ -163,6 +163,8 @@ echo " -----------------------------------------"
 docker run -d -p $PORT_NOSQLCLIENT:$PORT_NOSQLCLIENT --name mongoclient -e MONGOCLIENT_DEFAULT_CONNECTION_URL="mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST/admin?ssl=false" -e MONGOCLIENT_AUTH="true" -e MONGOCLIENT_USERNAME="root" -e MONGOCLIENT_PASSWORD="$MONGODB_ROOT_PASSWORD" mongoclient/mongoclient:latest
 ufw allow $PORT_NOSQLCLIENT
 ````
+
+Launch your browser to this address http://$MONGODB_HOST:3000/
 
 ### Feed with configuration data
 We need minimal data to start the application
@@ -173,7 +175,7 @@ echo " -----------------------------------------"
 echo ""
 
 cat data/init-stl.js | sed 's/$MONGODB_ROOT_PASSWORD/'$MONGODB_ROOT_PASSWORD'/g' > /tmp/init-stl.js
-kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@127.0.0.1:$PORT_MONGODB/ < /tmp/init-stl.js
+kubectl exec -i --namespace stl $PODMONGO -- mongo mongodb://root:$MONGODB_ROOT_PASSWORD@$MONGODB_HOST:$PORT_MONGODB/ < /tmp/init-stl.js
 ````
 
 ### STL backend
