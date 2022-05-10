@@ -2,9 +2,14 @@
 ## Development Environment
 ### Goland Idea
 Open the project and configure these three variables to launch the rest backend
-MONGODB_HOST=;
-MONGODB_ROOT_PASSWORD=;
-PORT_STL_BACKEND=
+MONGODB_HOST=db-stl-mongodb ;MONGODB_ROOT_PASSWORD=secret;PORT_STL_BACKEND=8080;
+
+### MongoDB local
+    docker run -it --rm mongo mongo --host db-stl-mongodb -u admin -p secr3t --authenticationDatabase admin stl
+
+or
+
+    docker-compose up -d --force-recreate
 
 # TODO
 ## Development

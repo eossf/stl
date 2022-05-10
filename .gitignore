@@ -8,3 +8,6 @@
 /httpRequests/
 .idea
 backend/pkg
+.vscode
+*.exe
+db/

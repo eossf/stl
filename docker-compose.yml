@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  mongodb:
+    image : mongo
+    container_name: mongodb
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - MONGODB_HOST=localhost
+    - MONGODB_ROOT_PASSWORD=secr3t
+    - MONGODB_USER=admin
+    volumes:
+    - ./db:/data/db
+    - ./data:/scripts
+    ports:
+    - 27017:27017
+    #docker exec mongodb mongo mongodb://root:secr3t@localhost:27017/ < /scripts/init-stl-unsecure.js   
