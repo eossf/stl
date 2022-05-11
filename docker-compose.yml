@@ -9,6 +9,8 @@ services:
     - MONGODB_HOST=localhost
     - MONGODB_ROOT_PASSWORD=secr3t
     - MONGODB_USER=admin
+    - MONGO_INITDB_ROOT_USERNAME=root
+    - MONGO_INITDB_ROOT_PASSWORD=secr3t
     volumes:
     - ./db:/data/db
     - ./data:/scripts
