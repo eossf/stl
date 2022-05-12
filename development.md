@@ -6,11 +6,8 @@ MONGODB_HOST=db-stl-mongodb ;MONGODB_ROOT_PASSWORD=secret;PORT_STL_BACKEND=8080;
 
 ### MongoDB local
     docker run -it --rm mongo mongo --host localhost -u admin -p secr3t --authenticationDatabase admin stl
-
 or
-
     docker-compose up -d --force-recreate
-
 
 ### run scripts 
 docker exec mongodb bash -c 'mongo < /scripts/init-stl-unsecure.js'
@@ -18,6 +15,11 @@ docker exec mongodb bash -c 'mongo < /scripts/destroy-stl.js'
 
 #### does not work ...
 docker exec mongodb bash -c 'mongo mongodb://root:secr3t@localhost:27017/ < /scripts/init-stl-unsecure.js'
+docker exec mongodb bash -c 'mongo -u root -p secr3t --authenticationDatabase admin < /scripts/init-stl-unsecure.js'
+docker exec mongodb bash -c 'mongo mongodb://root:secr3t@localhost:27017/ < /scripts/init-stl-unsecure.js'
+docker exec mongodb bash -c 'mongo mongodb://db-stl-mongodb:27017/?compressors=disabled&gssapiServiceName=mongodb '  < /scripts/init-stl-unsecure.js'
+docker exec -it mongodb bash -c 'mongo mongodb://db-stl-mongodb:27017/?compressors=disabled&gssapiServiceName=mongodb '
+docker exec -it mongodb bash -c 'mongo --authenticationDatabase admin mongodb://db-stl-mongodb:27017/?gssapiServiceName=mongodb < /scripts/init-stl-unsecure.js'
 
 
 # TODO

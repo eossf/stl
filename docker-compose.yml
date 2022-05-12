@@ -2,18 +2,52 @@ version: "3.9"
 services:
   mongodb:
     image : mongo
+    hostname: mongodb
     container_name: mongodb
-    environment:
-    - PUID=1000
-    - PGID=1000
-    - MONGODB_HOST=localhost
-    - MONGODB_ROOT_PASSWORD=secr3t
-    - MONGODB_USER=admin
-    - MONGO_INITDB_ROOT_USERNAME=root
-    - MONGO_INITDB_ROOT_PASSWORD=secr3t
+    # environment:
+    #   MONGODB_HOST: localhost
+    #   MONGODB_ROOT_PASSWORD: secret
+    #   MONGODB_USER: root
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
     - ./db:/data/db
     - ./data:/scripts
+    - ./data/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     ports:
     - 27017:27017
-    #docker exec mongodb mongo mongodb://root:secr3t@localhost:27017/ < /scripts/init-stl-unsecure.js   
+    #docker exec mongodb mongo mongodb://root:secret@mongodb:27017/ < /scripts/init-stl-unsecure.js
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+      ME_CONFIG_MONGODB_URL: mongodb://root:secret@mongo:27017/
+
+# Procedure
+#     Start MongoDB without access control.
+#     mongod --port 27017 --dbpath /data/db1
+#     Connect to the instance.
+#     mongo --port 27017
+
+#     Create the user administrator.
+#     use admin
+#     db.createUser(
+#       {
+#         user: "myUserAdmin",
+#         pwd: "abc123",
+#         roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
+#       }
+#     )
+
+#     Re-start the MongoDB instance with access control.
+#     mongod --auth --port 27017 --dbpath /data/db1
+
+#     Authenticate as the user administrator.
+#     mongo --port 27017 -u "myUserAdmin" -p "abc123" \
+#       --authenticationDatabase "admin"
+
