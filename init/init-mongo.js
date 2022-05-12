@@ -1,12 +1,7 @@
 db.createUser({
     user: 'root',
-    pwd: 'secret',
-    roles: [
-        {
-            role: 'readWrite',
-            db: 'stl',
-        },
-    ],
+    pwd: 'example',
+    roles: [{role: "readWrite", db: "admin"}, {role: "dbAdmin", db: "admin"}]
 });
 
 db = new Mongo().getDB("stl");
