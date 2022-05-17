@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
 )
 
@@ -24,47 +26,42 @@ const MAX = 99
 	c.Locked = false
 }*/
 
-/*func getTracks() []Track {
+func getTracks() []Track {
 	t := []Track{}
-	c := getClient()
-	c.Locked = true
-	var result bson.M
-	coll := c.MongoClient.Database("stl").Collection("tracks")
-	err := coll.FindOne(context.TODO(), bson.D{{"id", 1}}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found \n")
-		return t
-	}
-	if err != nil {
-		panic(err)
-	}
-
-	jsonData, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", jsonData)
-
-	log.Println("getTracks session UUID:", c.Uuid)
-	//c.Locked = false
+	
 	return t
-}*/
+}
 
 func getTrack(id int) Track {
 	t := Track{}
-	client := getClient(os.Getenv("MONGODB_URI"))
 
-	//c.Locked = true
+	uri := os.Getenv("MONGODB_URI")
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
 	var result bson.M
-	coll := client.Database("stl").Collection("tracks") //c.MongoClient.Database("stl").Collection("tracks")
-	coll.FindOne(context.TODO(), bson.D{{"id", 1}}).Decode(&result)
+	coll := client.Database("stl").Collection("tracks")
+	err = coll.FindOne(context.TODO(), bson.D{{"id", 1}}).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found \n")
+	}
+	if err != nil {
+		panic(err)
+	}
+
 	jsonData, err := json.MarshalIndent(result, "", "    ")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("%s\n", jsonData)
 
-	//log.Println("getTracks session UUID:", c.Uuid)
-	//c.Locked = false
 	return t
 }

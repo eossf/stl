@@ -17,20 +17,6 @@ type Client struct {
 	Locked      bool
 }
 
-func getClient(uri string) *mongo.Client {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-	return client
-}
-
 //func getClient() *Client {
 //	// get next available client
 //	countClients := 0
