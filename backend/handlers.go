@@ -22,19 +22,19 @@ func TrackCreate(w http.ResponseWriter, r *http.Request, params httprouter.Param
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	postTrack(*track)
+	//postTrack(*track)
 	writeOKResponse(w, track)
 }
 
 // Handler for the Tracks index action
 // GET /tracks
 func TrackIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	tracks := []Track{}
-	results := getTracks()
-	for _, track := range results {
-		tracks = append(tracks, track)
-	}
-	writeOKResponse(w, tracks)
+	//tracks := []Track{}
+	//results := getTracks()
+	//for _, track := range results {
+	//	tracks = append(tracks, track)
+	//}
+	//writeOKResponse(w, tracks)
 }
 
 // Handler for the Tracks Show action

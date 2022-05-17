@@ -1,90 +1,70 @@
 package main
 
 import (
-	"gopkg.in/mgo.v2/bson"
-	"log"
+	"context"
+	"encoding/json"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"os"
 )
 
-var sessions = make([]*Session, 0, MAX)
+var clients = make([]*Client, 0, MAX)
 
 const MAX = 99
 
-func postTrack(track Track) {
-	s := getSession()
-	s.Locked = true
+/*func postTrack(track Track) {
+	c := getClient()
+	c.Locked = true
 	coll := s.getCollection()
 	err := coll.Insert(&Track{track.Id, track.Name, track.Author, track.Steps})
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("postTrack session UUID:", s.Uuid)
-	s.Locked = false
-}
+	c.Locked = false
+}*/
 
-func getTracks() []Track {
-	results := []Track{}
-	s := getSession()
-	s.Locked = true
-	coll := s.getCollection()
-	err := coll.Find(bson.M{}).All(&results)
-	if err != nil {
-		log.Fatal(err)
+/*func getTracks() []Track {
+	t := []Track{}
+	c := getClient()
+	c.Locked = true
+	var result bson.M
+	coll := c.MongoClient.Database("stl").Collection("tracks")
+	err := coll.FindOne(context.TODO(), bson.D{{"id", 1}}).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		fmt.Printf("No document was found \n")
+		return t
 	}
-	log.Println("getTracks session UUID:", s.Uuid)
-	s.Locked = false
-	return results
-}
+	if err != nil {
+		panic(err)
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "    ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n", jsonData)
+
+	log.Println("getTracks session UUID:", c.Uuid)
+	//c.Locked = false
+	return t
+}*/
 
 func getTrack(id int) Track {
-	result := Track{}
-	s := getSession()
-	s.Locked = true
-	coll := s.getCollection()
-	err := coll.Find(bson.M{"id": id}).One(&result)
+	t := Track{}
+	client := getClient(os.Getenv("MONGODB_URI"))
+
+	//c.Locked = true
+	var result bson.M
+	coll := client.Database("stl").Collection("tracks") //c.MongoClient.Database("stl").Collection("tracks")
+	coll.FindOne(context.TODO(), bson.D{{"id", 1}}).Decode(&result)
+	jsonData, err := json.MarshalIndent(result, "", "    ")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-	log.Println("getTrack session UUID:", s.Uuid)
-	s.Locked = false
-	return result
-}
+	fmt.Printf("%s\n", jsonData)
 
-func getSession() *Session {
-	// get next available session
-	countSessions := 0
-	countLockedSessions := 0
-	addSession := true
-	for _, s := range sessions {
-		if s != nil {
-			if s.Locked {
-				countLockedSessions++
-			} else {
-				addSession = false
-				break
-			}
-			countSessions++
-			addSession = true
-		}
-	}
-	if addSession && countSessions > MAX {
-		log.Fatal("No more connection available ", countSessions, "/", MAX, " reached")
-	}
-	if addSession && countSessions <= MAX {
-		s := New(os.Getenv("MONGODB_HOST"), "stl", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"), "stl", "tracks")
-		sessions = append(sessions, s)
-		log.Println("New Session created: ", s.Uuid)
-	} else {
-		log.Println("Use existing connection")
-		sessions[countSessions].MgoSession.Refresh()
-	}
-	return sessions[countSessions]
-}
-
-func closeSession() {
-	for _, s := range sessions {
-		if s != nil {
-			defer s.MgoSession.Close()
-		}
-	}
+	//log.Println("getTracks session UUID:", c.Uuid)
+	//c.Locked = false
+	return t
 }
