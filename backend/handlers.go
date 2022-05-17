@@ -14,7 +14,6 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
-// Handler for the Tracks Create action
 // POST /tracks
 func TrackCreate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	track := &Track{}
@@ -26,18 +25,16 @@ func TrackCreate(w http.ResponseWriter, r *http.Request, params httprouter.Param
 	writeOKResponse(w, track)
 }
 
-// Handler for the Tracks index action
 // GET /tracks
 func TrackIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	//tracks := []Track{}
-	//results := getTracks()
-	//for _, track := range results {
-	//	tracks = append(tracks, track)
-	//}
-	//writeOKResponse(w, tracks)
+	tracks := []Track{}
+	results := getTracks()
+	for _, track := range results {
+		tracks = append(tracks, track)
+	}
+	writeOKResponse(w, tracks)
 }
 
-// Handler for the Tracks Show action
 // GET /tracks/:id
 func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	id := params.ByName("id")
