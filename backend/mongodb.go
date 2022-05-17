@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,23 +37,23 @@ func getTracks() []Track {
 	}()
 
 	coll := client.Database("stl").Collection("tracks")
-	filter := bson.D{{"id", bson.D{{"$gte", 1}}}}
+	filter := bson.D{{"id", bson.D{{"$gte", 0}}}}
 	cursor, err := coll.Find(context.TODO(), filter)
 	if err != nil {
 		panic(err)
 	}
 
-	var results []bson.M
-	if err = cursor.All(context.TODO(), &results); err != nil {
+	//var results []bson.M
+	if err = cursor.All(context.TODO(), &t); err != nil {
 		panic(err)
 	}
-	for _, result := range results {
+	/*for _, result := range results {
 		output, err := json.MarshalIndent(result, "", "    ")
 		if err != nil {
 			panic(err)
 		}
 		fmt.Printf("%s\n", output)
-	}
+	}*/
 
 	return t
 }
@@ -74,9 +73,9 @@ func getTrack(id int) Track {
 		}
 	}()
 
-	var result bson.M
+	//var result bson.M
 	coll := client.Database("stl").Collection("tracks")
-	err = coll.FindOne(context.TODO(), bson.D{{"id", 1}}).Decode(&result)
+	err = coll.FindOne(context.TODO(), bson.D{{"id", id}}).Decode(&t)
 	if err == mongo.ErrNoDocuments {
 		fmt.Printf("No document was found \n")
 	}
@@ -84,11 +83,12 @@ func getTrack(id int) Track {
 		panic(err)
 	}
 
-	jsonData, err := json.MarshalIndent(result, "", "    ")
+	/*jsonData, err := json.MarshalIndent(result, "", "    ")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("%s\n", jsonData)
 
+	json.Unmarshal([]byte(jsonData), &t)*/
 	return t
 }
