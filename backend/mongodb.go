@@ -6,64 +6,79 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"os"
 )
 
-/*func postTrack(track Track) {
-	c := getClient()
-	c.Locked = true
-	coll := s.getCollection()
-	err := coll.Insert(&Track{track.Id, track.Name, track.Author, track.Steps})
+func putTrack(track Track) {
+	log.Println("putTrack")
+	uri := os.Getenv("MONGODB_URI")
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
 	}
-	log.Println("postTrack session UUID:", s.Uuid)
-	c.Locked = false
-}*/
+
+	coll := client.Database("stl").Collection("tracks")
+	filter := bson.D{{"id", track.Id}}
+	replacement := bson.D{{"id", track.Id}, {"name", track.Name}, {"author", track.Author}, {"steps", track.Steps}}
+	_, err = coll.ReplaceOne(context.TODO(), filter, replacement)
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+}
+
+func postTrack(track Track) {
+	log.Println("postTrack")
+	uri := os.Getenv("MONGODB_URI")
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	coll := client.Database("stl").Collection("tracks")
+	_, err = coll.InsertOne(context.TODO(), &Track{Id: track.Id, Name: track.Name, Author: track.Author, Steps: track.Steps})
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+}
 
 func getTracks() []Track {
+	log.Println("getTracks")
 	t := []Track{}
 
 	uri := os.Getenv("MONGODB_URI")
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		panic(err)
 	}
-
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
 
 	coll := client.Database("stl").Collection("tracks")
 	filter := bson.D{{"id", bson.D{{"$gte", 0}}}}
 	cursor, err := coll.Find(context.TODO(), filter)
 	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		panic(err)
 	}
 
-	//var results []bson.M
 	if err = cursor.All(context.TODO(), &t); err != nil {
-		panic(err)
-	}
-	/*for _, result := range results {
-		output, err := json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%s\n", output)
-	}*/
-
-	return t
-}
-
-func getTrack(id int) Track {
-	t := Track{}
-
-	uri := os.Getenv("MONGODB_URI")
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		panic(err)
 	}
 
@@ -73,22 +88,32 @@ func getTrack(id int) Track {
 		}
 	}()
 
-	//var result bson.M
+	return t
+}
+
+func getTrack(id int) Track {
+	log.Println("getTrack ", id)
+	t := Track{}
+
+	uri := os.Getenv("MONGODB_URI")
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
 	coll := client.Database("stl").Collection("tracks")
-	err = coll.FindOne(context.TODO(), bson.D{{"id", id}}).Decode(&t)
-	if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found \n")
-	}
+	err = coll.FindOne(context.TODO(), bson.D{{"id", id}}, options.FindOne().SetShowRecordID(true)).Decode(&t)
 	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		panic(err)
 	}
 
-	/*jsonData, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", jsonData)
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
 
-	json.Unmarshal([]byte(jsonData), &t)*/
 	return t
 }

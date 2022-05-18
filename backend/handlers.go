@@ -15,13 +15,24 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 // POST /tracks
+func TrackUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	track := &Track{}
+	if err := populateModelFromHandler(w, r, params, track); err != nil {
+		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+		return
+	}
+	putTrack(*track)
+	writeOKResponse(w, track)
+}
+
+// POST /tracks
 func TrackCreate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	track := &Track{}
 	if err := populateModelFromHandler(w, r, params, track); err != nil {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	//postTrack(*track)
+	postTrack(*track)
 	writeOKResponse(w, track)
 }
 
@@ -59,6 +70,9 @@ func writeOKResponse(w http.ResponseWriter, m interface{}) {
 // Writes the error response as a Standard API JSON response with a response code
 func writeErrorResponse(w http.ResponseWriter, errorCode int, errorMsg string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.WriteHeader(errorCode)
 	json.
 		NewEncoder(w).

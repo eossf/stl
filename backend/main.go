@@ -8,8 +8,8 @@ import (
 
 func main() {
 	// check the mongodb with track id = 1
-	//	getTrack(1)
-	getTracks()
+	getTrack(1)
+
 	log.Println("Start HTTP server")
 	// start http server
 	router := NewRouter(AllRoutes())
