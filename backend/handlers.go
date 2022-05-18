@@ -46,6 +46,9 @@ func TrackShow(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 // Writes the response as a standard JSON response with StatusOK
 func writeOKResponse(w http.ResponseWriter, m interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.WriteHeader(http.StatusOK)
 	v := json.NewEncoder(w).Encode(m)
 	if err := v; err != nil {
