@@ -7,12 +7,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 )
 
 func putTrack(track Track) {
 	log.Println("putTrack")
-	uri := os.Getenv("MONGODB_URI")
+
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
@@ -37,8 +36,9 @@ func putTrack(track Track) {
 
 func postTrack(track Track) {
 	log.Println("postTrack")
-	uri := os.Getenv("MONGODB_URI")
+
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		panic(err)
@@ -62,7 +62,6 @@ func getTracks() []Track {
 	log.Println("getTracks")
 	t := []Track{}
 
-	uri := os.Getenv("MONGODB_URI")
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
@@ -95,7 +94,6 @@ func getTrack(id int) Track {
 	log.Println("getTrack ", id)
 	t := Track{}
 
-	uri := os.Getenv("MONGODB_URI")
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
@@ -104,6 +102,32 @@ func getTrack(id int) Track {
 
 	coll := client.Database("stl").Collection("tracks")
 	err = coll.FindOne(context.TODO(), bson.D{{"id", id}}, options.FindOne().SetShowRecordID(true)).Decode(&t)
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	return t
+}
+
+func delTrack(id int) Track {
+	log.Println("delTrack ", id)
+	t := Track{}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	coll := client.Database("stl").Collection("tracks")
+	_, err = coll.DeleteOne(context.TODO(), bson.D{{"id", id}})
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		panic(err)

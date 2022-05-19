@@ -23,6 +23,7 @@ func AllRoutes() Routes {
 		Route{"TrackShow", "GET", "/tracks/:id", TrackShow},
 		Route{"TrackCreate", "POST", "/tracks", TrackCreate},
 		Route{"TrackUpdate", "PUT", "/tracks/:id", TrackUpdate},
+		Route{"TrackDelete", "DELETE", "/tracks/:id", TrackDelete},
 	}
 	return routes
 }

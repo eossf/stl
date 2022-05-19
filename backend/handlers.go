@@ -14,7 +14,15 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
-// POST /tracks
+// DELETE /track/:id
+func TrackDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	id := params.ByName("id")
+	i, _ := strconv.Atoi(id)
+	result := delTrack(i)
+	writeOKResponse(w, result)
+}
+
+// PUT /track
 func TrackUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	track := &Track{}
 	if err := populateModelFromHandler(w, r, params, track); err != nil {
