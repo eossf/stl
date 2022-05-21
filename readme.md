@@ -19,7 +19,7 @@ Current v 0.0.1
 
 
 
-![](images\stl-v0.0.1.PNG)
+![](images/stl-v0.0.1.PNG)
 
 ## Installation
 
