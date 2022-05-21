@@ -21,7 +21,9 @@ func AllRoutes() Routes {
 		Route{"Index", "GET", "/", Index},
 		Route{"TrackIndex", "GET", "/tracks", TrackIndex},
 		Route{"TrackShow", "GET", "/tracks/:id", TrackShow},
-		Route{"TrackShow", "POST", "/tracks", TrackCreate},
+		Route{"TrackCreate", "POST", "/tracks", TrackCreate},
+		Route{"TrackUpdate", "PUT", "/tracks/:id", TrackUpdate},
+		Route{"TrackDelete", "DELETE", "/tracks/:id", TrackDelete},
 	}
 	return routes
 }

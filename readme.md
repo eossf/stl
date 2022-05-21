@@ -184,6 +184,8 @@ echo " -----------------------------------------"
 echo " --- ### STL backend"
 echo " -----------------------------------------"
 
+cd ~/stl/
+go mod tidy
 cd ~/stl/backend
 go get -u -v -f all
 while read l; do go get -v "$l"; done < <(go list -f '{{ join .Imports "\n" }}')

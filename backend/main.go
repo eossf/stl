@@ -6,13 +6,18 @@ import (
 	"os"
 )
 
+// global vars
+var uri = os.Getenv("MONGODB_URI")
+var hostPort = os.Getenv("PORT_STL_BACKEND")
+
 func main() {
+
 	// check the mongodb with track id = 1
 	getTrack(1)
-	log.Println("Start HTTP server")
-	// start http server
-	router := NewRouter(AllRoutes())
 
+	// start http server
+	log.Println("Start HTTP server")
+	router := NewRouter(AllRoutes())
 	router.GlobalOPTIONS = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Access-Control-Request-Method") != "" {
 			// Set CORS headers
@@ -26,6 +31,5 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	host_port := os.Getenv("PORT_STL_BACKEND")
-	log.Fatal(http.ListenAndServe(":"+host_port, router))
+	log.Fatal(http.ListenAndServe(":"+hostPort, router))
 }

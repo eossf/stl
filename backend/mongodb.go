@@ -1,90 +1,143 @@
 package main
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 )
 
-var sessions = make([]*Session, 0, MAX)
+func putTrack(track Track) {
+	log.Println("putTrack")
 
-const MAX = 99
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	coll := client.Database("stl").Collection("tracks")
+	filter := bson.D{{"id", track.Id}}
+	replacement := bson.D{{"id", track.Id}, {"name", track.Name}, {"author", track.Author}, {"steps", track.Steps}}
+	_, err = coll.ReplaceOne(context.TODO(), filter, replacement)
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+}
 
 func postTrack(track Track) {
-	s := getSession()
-	s.Locked = true
-	coll := s.getCollection()
-	err := coll.Insert(&Track{track.Id, track.Name, track.Author, track.Steps})
+	log.Println("postTrack")
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
 	}
-	log.Println("postTrack session UUID:", s.Uuid)
-	s.Locked = false
+
+	coll := client.Database("stl").Collection("tracks")
+	_, err = coll.InsertOne(context.TODO(), &Track{Id: track.Id, Name: track.Name, Author: track.Author, Steps: track.Steps})
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
 }
 
 func getTracks() []Track {
-	results := []Track{}
-	s := getSession()
-	s.Locked = true
-	coll := s.getCollection()
-	err := coll.Find(bson.M{}).All(&results)
+	log.Println("getTracks")
+	t := []Track{}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
 	}
-	log.Println("getTracks session UUID:", s.Uuid)
-	s.Locked = false
-	return results
+
+	coll := client.Database("stl").Collection("tracks")
+	filter := bson.D{{"id", bson.D{{"$gte", 0}}}}
+	cursor, err := coll.Find(context.TODO(), filter)
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	if err = cursor.All(context.TODO(), &t); err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	return t
 }
 
 func getTrack(id int) Track {
-	result := Track{}
-	s := getSession()
-	s.Locked = true
-	coll := s.getCollection()
-	err := coll.Find(bson.M{"id": id}).One(&result)
+	log.Println("getTrack ", id)
+	t := Track{}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
 	}
-	log.Println("getTrack session UUID:", s.Uuid)
-	s.Locked = false
-	return result
+
+	coll := client.Database("stl").Collection("tracks")
+	err = coll.FindOne(context.TODO(), bson.D{{"id", id}}, options.FindOne().SetShowRecordID(true)).Decode(&t)
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	return t
 }
 
-func getSession() *Session {
-	// get next available session
-	countSessions := 0
-	countLockedSessions := 0
-	addSession := true
-	for _, s := range sessions {
-		if s != nil {
-			if s.Locked {
-				countLockedSessions++
-			} else {
-				addSession = false
-				break
-			}
-			countSessions++
-			addSession = true
-		}
-	}
-	if addSession && countSessions > MAX {
-		log.Fatal("No more connection available ", countSessions, "/", MAX, " reached")
-	}
-	if addSession && countSessions <= MAX {
-		s := New(os.Getenv("MONGODB_HOST"), "stl", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"), "stl", "tracks")
-		sessions = append(sessions, s)
-		log.Println("New Session created: ", s.Uuid)
-	} else {
-		log.Println("Use existing connection")
-		sessions[countSessions].MgoSession.Refresh()
-	}
-	return sessions[countSessions]
-}
+func delTrack(id int) Track {
+	log.Println("delTrack ", id)
+	t := Track{}
 
-func closeSession() {
-	for _, s := range sessions {
-		if s != nil {
-			defer s.MgoSession.Close()
-		}
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
 	}
+
+	coll := client.Database("stl").Collection("tracks")
+	_, err = coll.DeleteOne(context.TODO(), bson.D{{"id", id}})
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+		panic(err)
+	}
+
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	return t
 }
