@@ -1,13 +1,32 @@
-# STL : SainTeLyon flutter app
-STL is a demo of a fullstack application, features are :
-- [ ] Live Run, follows an existing track (GPX)
-- [ ] Live Run, records a track (GPX)
-- [ ] Support a runner: go to stops using GPS mobile
-- [ ] Live View runners and position in a map
-- [ ] View Track and guide a runner
-- [ ] Misc: Import, Export GPX, Enrich with metadata, ...
+# Summit Tracks List
+
+
+STL is a demo of a fullstack application. 
+
+Features are :
+
+- [ ] v.0.0.x **Alpha version:** display tracks, display menu, test persistance, gps, googlemaps, metadata, ...
+- [ ] v0.1.x **View Tracks:** display tracks, current location for guiding a runner
+- [ ] v0.2.x **Misc:** Import, Export GPX, Enrich with metadata, ...
+- [ ] v0.3.x **Follow a runner:** find location of one or more runner, go to each steps using mobile GPS direction
+- [ ] v0.4.x **Live Run:** follow an existing track, record a new track, while your runs
+
+
+
+## Release
+
+Current v 0.0.1
+
+
+
+![](C:\DevOps\stl\stl\images\stl-v0.0.1.PNG)
+
+## Installation
+
+With an ubuntu existing server.
 
 Connect to your server
+
 ````sh
 ssh -i ~/.ssh/id_rsa root@REMOTE_IP
 ````
@@ -143,7 +162,7 @@ If you selected NodePort deployment, port 40000 :
  export NODE_PORT=$(kubectl get --namespace stl -o jsonpath="{.spec.ports[0].nodePort}" services mongodb-stl)
  kubectl port-forward --namespace stl --address 0.0.0.0 svc/db-stl-mongodb $PORT_MONGODB:$NODE_PORT &
  mongo --host $NODE_IP --port $NODE_PORT --authenticationDatabase admin -p $MONGODB_ROOT_PASSWORD
-````
+ ````
 
 ````bash
 echo " -----------------------------------------"
