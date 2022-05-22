@@ -1,4 +1,4 @@
-# Summit Tracks List
+# Summit Tracks Live
 
 
 STL is a demo of a fullstack application. 
@@ -17,9 +17,7 @@ Features are :
 
 Current v 0.0.1
 
-
-
-![](images/stl-v0.0.1.PNG)
+![](images/summit-tracks-live-3.png)
 
 ## Installation
 
