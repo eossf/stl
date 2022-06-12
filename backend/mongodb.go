@@ -20,7 +20,7 @@ func putTrack(track Track) {
 
 	coll := client.Database("stl").Collection("tracks")
 	filter := bson.D{{"id", track.Id}}
-	replacement := bson.D{{"id", track.Id}, {"name", track.Name}, {"author", track.Author}, {"steps", track.Steps}}
+	replacement := bson.D{{"id", track.Id}, {"name", track.Name}, {"author", track.Author}, {"steps", track.Steps}, {"starting-point", track.StartingPoint}}
 	_, err = coll.ReplaceOne(context.TODO(), filter, replacement)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
@@ -45,7 +45,7 @@ func postTrack(track Track) {
 	}
 
 	coll := client.Database("stl").Collection("tracks")
-	_, err = coll.InsertOne(context.TODO(), &Track{Id: track.Id, Name: track.Name, Author: track.Author, Steps: track.Steps})
+	_, err = coll.InsertOne(context.TODO(), &Track{Id: track.Id, Name: track.Name, Author: track.Author, Steps: track.Steps, StartingPoint: track.StartingPoint})
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		panic(err)

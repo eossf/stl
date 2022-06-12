@@ -9,9 +9,10 @@ import (
 //Text      string             `json:"text"`
 
 type Track struct {
-	_ID    primitive.ObjectID `json:"_id"`
-	Id     int                `json:"id"`
-	Name   string             `json:"name"`
-	Author string             `json:"author"`
-	Steps  int                `json:"steps"`
+	_ID           primitive.ObjectID `json:"_id"`
+	Id            int                `json:"id"`
+	Name          string             `json:"name"`
+	Author        string             `json:"author"`
+	Steps         int                `json:"steps"`
+	StartingPoint string             `json:"starting-point"`
 }
